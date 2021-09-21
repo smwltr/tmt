@@ -87,7 +87,6 @@ class PrepareInstall(tmt.steps.prepare.PreparePlugin):
     def wake(self, keys=None):
         """ Wake up the plugin, process data, apply options """
         super().wake(keys=keys)
-
         # Convert to list if necessary
         tmt.utils.listify(
             self.data, split=True,
