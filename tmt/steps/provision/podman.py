@@ -131,11 +131,7 @@ class GuestContainer(tmt.Guest):
         # Mount the whole plan directory in the container
         workdir = self.parent.plan.workdir
 
-        # Deduce container name from workdir, because it is a path
-        # make it podman container name friendly. Append a random
-        # suffix to avoid clashes when multihost is used.
-        self.container = self._random_name(
-            prefix='tmt' + re.sub('[/ ]', '-', workdir), length=40)
+        self.container = self._tmt_name()
         self.verbose('name', self.container, 'green')
 
         # FIXME: Workaround for BZ#1900021 (f34 container on centos-8)

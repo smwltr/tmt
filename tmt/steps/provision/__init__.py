@@ -250,6 +250,11 @@ class Guest(tmt.utils.Common):
         # Return tail (containing random characters) of name
         return name[-length:]
 
+    def _tmt_name(self):
+        """ Generate a name prefixed with tmt run id """
+        _, run_id = os.path.split(self.parent.plan.my_run.workdir)
+        return self._random_name(prefix="tmt-{0}-".format(run_id[-3:]))
+
     def _ssh_guest(self):
         """ Return user@guest """
         return f'{self.user}@{self.guest}'
