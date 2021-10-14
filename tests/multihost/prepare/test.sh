@@ -12,7 +12,8 @@ rlJournalStart
     opt="-i $run --scratch provision prepare -vvv finish"
     rlPhaseStartTest "Run on all guests"
         rlRun -s "tmt run $opt plan -n all"
-        rlAssertGrep "4 preparations applied" $rlRun_LOG
+        # 4 implicit + 4 preparations run on all guests = 8 preparations
+        rlAssertGrep "8 preparations applied" $rlRun_LOG
         rlRun "grep 'script: echo' $rlRun_LOG | wc -l > lines"
         rlAssertGrep "4" lines
         rlRun "rm $rlRun_LOG"
@@ -20,7 +21,8 @@ rlJournalStart
 
     rlPhaseStartTest "Run on a single guest"
         rlRun -s "tmt run $opt plan -n name"
-        rlAssertGrep "1 preparation applied" $rlRun_LOG
+        # 4 implicit + 1 specific preparation = 5 preparations
+        rlAssertGrep "5 preparations applied" $rlRun_LOG
         rlAssertgrep "on: server-one" $rlRun_LOG
         rlRun "grep 'script: echo' $rlRun_LOG | wc -l > lines"
         rlAssertGrep "1" lines
@@ -29,7 +31,8 @@ rlJournalStart
 
     rlPhaseStartTest "Run on all guests with a role"
         rlRun -s "tmt run $opt plan -n role"
-        rlAssertGrep "2 preparations applied" $rlRun_LOG
+        # 4 implicit + 2 run based on role = 6 preparations
+        rlAssertGrep "6 preparations applied" $rlRun_LOG
         rlAssertgrep "on: server" $rlRun_LOG
         rlRun "grep 'script: echo' $rlRun_LOG | wc -l > lines"
         rlAssertGrep "2" lines
@@ -39,8 +42,8 @@ rlJournalStart
     rlPhaseStartTest "Combined case"
         rlRun -s "tmt run $opt plan -n combined"
         # 1 ran on all (4 guests) + 1 ran on server role (2 guests) + 1 ran
-        # on single guest (1 guest) = 7 preparations
-        rlAssertGrep "7 preparations applied" $rlRun_LOG
+        # on single guest (1 guest) + 4 implicit preparations = 11 preparations
+        rlAssertGrep "11 preparations applied" $rlRun_LOG
         rlRun "grep 'All' $rlRun_LOG | wc -l > lines"
         rlAssertGrep "4" lines
         rlRun "grep 'Server' $rlRun_LOG | wc -l > lines"

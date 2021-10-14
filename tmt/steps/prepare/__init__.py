@@ -1,5 +1,5 @@
+import collections
 import copy
-import re
 
 import click
 import fmf
@@ -54,6 +54,22 @@ class Prepare(tmt.steps.Step):
             self.preparations_applied, 'preparation')
         self.info('summary', f'{preparations} applied', 'green', shift=1)
 
+    def _prepare_roles(self):
+        """ Create a mapping of roles to guest names """
+        role_mapping = collections.defaultdict(list)
+        for guest in self.plan.provision.guests():
+            if guest.role:
+                role_mapping[guest.role].append(guest.name)
+        return role_mapping
+
+    def _prepare_hosts(self):
+        """ Create a mapping of guest names to IP addresses """
+        host_mapping = {}
+        for guest in self.plan.provision.guests():
+            if hasattr(guest, 'guest') and guest.guest:
+                host_mapping[guest.name] = guest.guest
+        return host_mapping
+
     def go(self):
         """ Prepare the guests """
         super().go()
@@ -91,6 +107,17 @@ class Prepare(tmt.steps.Step):
                 order=tmt.utils.DEFAULT_PLUGIN_ORDER_RECOMMENDS,
                 package=recommends,
                 missing='skip')
+            self._plugins.append(PreparePlugin.delegate(self, data))
+
+        # Implicit multihost setup
+        if len(self.plan.provision.guests()) > 1:
+            data = dict(
+                how='multihost',
+                name='multihost',
+                summary='Setup guest for multihost testing',
+                roles=self._prepare_roles(),
+                hosts=self._prepare_hosts(),
+                )
             self._plugins.append(PreparePlugin.delegate(self, data))
 
         # Prepare guests (including workdir sync)
