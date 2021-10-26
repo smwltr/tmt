@@ -172,8 +172,11 @@ class ExecuteInternal(tmt.steps.execute.ExecutePlugin):
         test.real_duration = self.test_duration(start, end)
         duration = click.style(test.real_duration, fg='cyan')
         shift = 1 if self.opt('verbose') < 2 else 2
+        test._result = self.check(test)
+        colored_result = test._result.show(brief=True)
         self.verbose(
-            f"{duration} {test.name} [{progress}]{timeout}", shift=shift)
+            f"{duration} {colored_result} {test.name} [{progress}]{timeout}",
+            shift=shift)
 
     def check(self, test):
         """ Check the test result """
@@ -297,7 +300,7 @@ class ExecuteInternal(tmt.steps.execute.ExecutePlugin):
                     guest.pull(source=self.data_path(test, full=True))
                     if self._handle_reboot(test, guest):
                         continue
-                    self._results.append(self.check(test))
+                    self._results.append(test._result)
                     if (exit_first and
                             self._results[-1].result not in ('pass', 'info')):
                         # Clear the progress bar before outputting

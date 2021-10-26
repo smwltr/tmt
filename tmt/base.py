@@ -1853,10 +1853,12 @@ class Result(object):
             comments.append(count + ' ' + click.style(comment, fg='magenta'))
         return fmf.utils.listed(comments or ['no results found'])
 
-    def show(self):
+    def show(self, brief=False):
         """ Return a nicely colored result with test name (and note) """
         result = 'errr' if self.result == 'error' else self.result
         colored = style(result, fg=self._results[self.result])
+        if brief:
+            return colored
         note = f" ({self.note})" if self.note else ''
         return f"{colored} {self.name}{note}"
 
