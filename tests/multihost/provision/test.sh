@@ -31,7 +31,7 @@ rlJournalStart
 
         # 2 guests were removed
         rlRun "grep 'container: removed' $rlRun_LOG | wc -l > lines"
-        rlAssertgrep "2" lines
+        rlAssertGrep "2" lines
 
         rlRun "rm lines"
         rlRun "rm $rlRun_LOG"
@@ -52,11 +52,11 @@ rlJournalStart
 
         # Each guest has a role
         rlRun "grep 'role: ' $guests | wc -l > lines"
-        rlAssertgrep "4" "lines"
+        rlAssertGrep "4" "lines"
 
         # 4 guests were removed
         rlRun "grep 'container: removed' $rlRun_LOG | wc -l > lines"
-        rlAssertgrep "4" lines
+        rlAssertGrep "4" lines
 
         rlRun "rm lines"
         rlRun "rm $rlRun_LOG"
