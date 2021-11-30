@@ -250,7 +250,7 @@ class ProvisionTestcloud(tmt.steps.provision.ProvisionPlugin):
 
         # Give info about provided data
         data = dict()
-        for key in self._keys:
+        for key in self._keys + self._common_keys:
             data[key] = self.get(key)
             if key == 'memory':
                 self.info('memory', f"{self.get('memory')} MB", 'green')

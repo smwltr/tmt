@@ -172,7 +172,7 @@ class ProvisionPlugin(tmt.steps.Plugin):
     _supported_methods = []
 
     # Common keys for all provision step implementations
-    _keys = ['role']
+    _common_keys = ['role']
 
     @classmethod
     def base_command(cls, method_class=None, usage=None):

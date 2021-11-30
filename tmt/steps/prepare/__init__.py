@@ -152,7 +152,7 @@ class PreparePlugin(tmt.steps.Plugin):
     _supported_methods = []
 
     # Common keys for all prepare step implementations
-    _keys = ['on']
+    _common_keys = ['on']
 
     @classmethod
     def base_command(cls, method_class=None, usage=None):
