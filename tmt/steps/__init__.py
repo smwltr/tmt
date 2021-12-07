@@ -267,6 +267,16 @@ class Plugin(tmt.utils.Common, metaclass=PluginIndex):
                 f"Missing 'name' in the {step} step config "
                 f"of the '{step.plan}' plan.")
 
+        # FIXME Convert boolean keys 'True' into string 'on'
+        # This is necessary until python3-ruamel-yaml >= 0.16
+        # is available on epel-8 as well as it seems that 0.15
+        # does not fully support the yaml 1.2 version.
+        # https://bugzilla.redhat.com/show_bug.cgi?id=1700334
+        try:
+            data["on"] = data.pop(True)
+        except KeyError:
+            pass
+
         # Store name, data and parent step
         super().__init__(parent=step, name=data['name'])
         self.data = data
