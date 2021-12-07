@@ -11,7 +11,8 @@ rlJournalStart
 
     opt="--scratch -i $run"
     rlPhaseStartTest "Wrong provision"
-        rlRun -s "tmt run $opt plan -n wrong provision finish" 2 "Names not unique"
+        rlRun -s "tmt run $opt plan -n wrong provision finish" \
+            2 "Names not unique"
         rlAssertGrep "must be unique" $rlRun_LOG
     rlPhaseEnd
 
@@ -36,11 +37,11 @@ rlJournalStart
     rlPhaseEnd
 
     rlPhaseStartTest "Correct provision with roles"
-        rlRun -s "tmt run $opt plan -n roles provision finish" 0
+        rlRun -s "tmt run $opt plan -n /roles provision finish" 0
         rlAssertGrep "4 guests provisioned" $rlRun_LOG
         # how: container should be there 4 times
         rlRun "grep 'how: container' $rlRun_LOG | wc -l > lines"
-        rlAssertGrep "4" $rlRun_LOG
+        rlAssertGrep "4" lines
 
         guests="$run/roles/provision/guests.yaml"
         rlAssertGrep "client-one" $guests
