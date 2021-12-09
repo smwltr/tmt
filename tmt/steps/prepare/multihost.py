@@ -51,11 +51,11 @@ class PrepareMultihost(tmt.steps.prepare.PreparePlugin):
         """ Prepare the guests """
         super().go(guest)
 
-        self.debug('Exporting roles', level=2)
+        self.debug('Export roles.', level=2)
         for role, corresponding_guests in self.get('roles').items():
             formatted_guests = ','.join(corresponding_guests)
             self.step.plan.environment[role] = formatted_guests
-        self.debug('Adding hosts to /etc/hosts', level=2)
+        self.debug("Add hosts to '/etc/hosts'.", level=2)
         for host_name, host_address in self.get('hosts').items():
             if host_address:
                 guest.execute(

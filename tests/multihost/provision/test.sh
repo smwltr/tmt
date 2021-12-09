@@ -60,6 +60,10 @@ rlJournalStart
         rlRun "rm lines"
     rlPhaseEnd
 
+    rlPhaseStartTest "Full plan without roles"
+        rlRun -s "tmt run $opt plan -n noroles"
+    rlPhaseEnd
+
     rlPhaseStartCleanup
         rlRun "popd"
         rlRun "rm -r $run" 0 "Remove run directory"

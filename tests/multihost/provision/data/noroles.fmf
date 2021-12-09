@@ -4,4 +4,4 @@ provision:
   - name: server
     how: container
 execute:
-    script: tmt --help
+    script: echo works fine

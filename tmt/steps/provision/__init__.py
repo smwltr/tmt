@@ -232,6 +232,7 @@ class Guest(tmt.utils.Common):
         user ....... user name to log in
         key ........ path to the private key (str or list)
         password ... password
+        role ....... guest role in the multihost scenario
 
     These are by default imported into instance attributes (see the
     class attribute '_keys' below).

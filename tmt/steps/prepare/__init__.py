@@ -175,9 +175,14 @@ class PreparePlugin(tmt.steps.Plugin):
         return prepare
 
     def go(self, guest):
+        """ Prepare the guest (common actions) """
         super().go()
+
+        # Show guest name first in multihost scenarios
+        if self.step.plan.provision.is_multihost:
+            self.info('guest', guest.name, 'green')
+
+        # Show requested role if defined
         on = self.get('on')
         if on:
             self.info('on', on, 'green')
-        if self.step.plan.provision.is_multihost:
-            self.info('guest', guest.name, 'green')
