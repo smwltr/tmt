@@ -1861,7 +1861,7 @@ class Result(object):
         'error': 'magenta',
         }
 
-    def __init__(self, data, name):
+    def __init__(self, data, name, interpret=None):
         """
         Initialize test result data """
 
@@ -1886,6 +1886,10 @@ class Result(object):
             self.log = tmt.utils.listify(data['log'])
         except KeyError:
             self.log = []
+
+        # Handle alternative result interpretation
+        if interpret == "xfail":
+            ...
 
     @staticmethod
     def total(results):
