@@ -7,10 +7,17 @@ USER_HOME="/home/$USER"
 
 CONNECT_RUN="/tmp/CONNECT"
 
-COMMIT="${COMMIT:-}"
+BRANCH="${BRANCH:-}"
+# Set following to 1 if you are running on release
+PRE_RELEASE="${PRE_RELEASE:-0}"
 
 rlJournalStart
     rlPhaseStartSetup
+
+        if [[ $PRE_RELEASE -eq 1 ]]; then
+            [[ -z "$BRANCH" ]] && rlDie "Please set BRANCH when running pre-release"
+        fi
+
         rlFileBackup /etc/sudoers
         id $USER &>/dev/null && {
             rlRun "pkill -9 -u $USER" 0,1
@@ -20,6 +27,7 @@ rlJournalStart
         rlRun "useradd $USER"
         rlRun "echo '$USER ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers" 0 "password-less sudo for test user"
         rlRun "chmod 400 /etc/sudoers"
+        rlRun "loginctl enable-linger $USER" # start session so /run/ directory is initialized
 
         # Making sure USER can r/w to the /var/tmp/tmt
         test -d /var/tmp/tmt && rlRun "chown $USER:$USER /var/tmp/tmt"
@@ -27,8 +35,9 @@ rlJournalStart
         # Clone repo
         rlRun "git clone https://github.com/psss/tmt $USER_HOME/tmt"
         rlRun "pushd $USER_HOME/tmt"
-        [ -n "$COMMIT" ] && rlRun "git checkout --force '$COMMIT'"
-        rlRun "sed 's/^Version:.*/Version: 9.9.9/' -i tmt.spec"
+        [ -n "$BRANCH" ] && rlRun "git checkout --force '$BRANCH'"
+        # Do not "patch" version for pre-release...
+        [[ $PRE_RELEASE -ne 1 ]] && rlRun "sed 's/^Version:.*/Version: 9.9.9/' -i tmt.spec"
 
         # Install tmt
         if make rpm 2> /tmp/stderr; then
