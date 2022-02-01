@@ -69,6 +69,15 @@ rlJournalStart
         sed '/default:/d' $CONNECT_RUN/plans/default/provision/guests.yaml >> $CONNECT_FMF
         rlLog "$(cat $CONNECT_FMF)"
 
+        # Prepare fedora image (https://tmt.readthedocs.io/en/latest/questions.html#container-package-cache)
+        # but make it work with podman run  registry.fedoraproject.org/fedora:latest
+        rlRun "su -l -c 'podman run -itd --name fresh fedora' $USER"
+        rlRun "su -l -c 'podman exec fresh dnf makecache' $USER"
+        rlRun "su -l -c 'podman commit fresh fresh' $USER"
+        rlRun "su -l -c 'podman container rm -f fresh' $USER"
+        rlRun "su -l -c 'podman tag fresh registry.fedoraproject.org/fedora:latest' $USER"
+        rlRun "su -l -c 'podman images' $USER"
+
         # Patch plans/main.fmf
         PLANS_MAIN=plans/main.fmf
         {
