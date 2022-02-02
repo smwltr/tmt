@@ -11,4 +11,5 @@ require:
 - make
 - python3-docutils
 - procps-ng
+- guestfs-tools
 duration: 3h

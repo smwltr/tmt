@@ -72,7 +72,7 @@ rlJournalStart
         rlRun "su -l -c 'tmt run --rm plans --default provision -h virtual finish' $USER" 0 "Fetch image"
         # Run dnf makecache in each image (should be single one though)
         for qcow in /var/tmp/tmt/testcloud/images/*qcow2; do
-            virt-customize -a $qcow --run-command 'dnf makecache'
+            rlRun "virt-customize -a $qcow --run-command 'dnf makecache'" 0 "pre-fetch dnf cache in the image"
         done
 
         rlRun "su -l -c 'tmt run --id $CONNECT_RUN plans --default provision -h virtual' $USER"
