@@ -58,6 +58,23 @@ rlJournalStart
         test -d $CONNECT_RUN && rlRun "rm -rf $CONNECT_RUN"
         test -d /var/tmp/tmt/testcloud && rlRun "rm -rf /var/tmp/tmt/testcloud"
 
+
+        # Prepare fedora container image (https://tmt.readthedocs.io/en/latest/questions.html#container-package-cache)
+        # but make it work with podman run  registry.fedoraproject.org/fedora:latest
+        rlRun "su -l -c 'podman run -itd --name fresh fedora' $USER"
+        rlRun "su -l -c 'podman exec fresh dnf makecache' $USER"
+        rlRun "su -l -c 'podman commit fresh fresh' $USER"
+        rlRun "su -l -c 'podman container rm -f fresh' $USER"
+        rlRun "su -l -c 'podman tag fresh registry.fedoraproject.org/fedora:latest' $USER"
+        rlRun "su -l -c 'podman images' $USER"
+
+        # Prepare fedora VM
+        rlRun "su -l -c 'tmt run --rm plans --default provision -h virtual finish' $USER" 0 "Fetch image"
+        # Run dnf makecache in each image (should be single one though)
+        for qcow in /var/tmp/tmt/testcloud/images/*qcow2; do
+            virt-customize -a $qcow --run-command 'dnf makecache'
+        done
+
         rlRun "su -l -c 'tmt run --id $CONNECT_RUN plans --default provision -h virtual' $USER"
         CONNECT_TO=$CONNECT_RUN/plans/default/provision/guests.yaml
         rlAssertExists $CONNECT_TO
@@ -69,14 +86,6 @@ rlJournalStart
         sed '/default:/d' $CONNECT_RUN/plans/default/provision/guests.yaml >> $CONNECT_FMF
         rlLog "$(cat $CONNECT_FMF)"
 
-        # Prepare fedora image (https://tmt.readthedocs.io/en/latest/questions.html#container-package-cache)
-        # but make it work with podman run  registry.fedoraproject.org/fedora:latest
-        rlRun "su -l -c 'podman run -itd --name fresh fedora' $USER"
-        rlRun "su -l -c 'podman exec fresh dnf makecache' $USER"
-        rlRun "su -l -c 'podman commit fresh fresh' $USER"
-        rlRun "su -l -c 'podman container rm -f fresh' $USER"
-        rlRun "su -l -c 'podman tag fresh registry.fedoraproject.org/fedora:latest' $USER"
-        rlRun "su -l -c 'podman images' $USER"
 
         # Patch plans/main.fmf
         PLANS_MAIN=plans/main.fmf
@@ -90,17 +99,25 @@ rlJournalStart
         # Delete the plan -> container vs host are not synced so rpms might not be installable
         rlRun 'rm -f plans/install/minimal.fmf'
         rlRun "git diff | cat"
+        if [ -z "$PLANS" ]; then
+            rlRun "su -l -c 'cd $USER_HOME/tmt; tmt -c how=full plans ls --filter=enabled:true > $USER_HOME/enabled_plans' $USER"
+            PLANS="$(echo $(cat $USER_HOME/enabled_plans))"
+        fi
     rlPhaseEnd
 
-    rlPhaseStartTest
-        # Core of the test runs as $USER, -l should clear all BEAKER_envs.
-        rlRun "su -l -c 'cd $USER_HOME/tmt; tmt -c how=full run --id $USER_HOME/RUN -v $PLANS' $USER"
-    rlPhaseEnd
+    for plan in $PLANS; do
+        rlPhaseStartTest "Test: $plan"
+            RUN="run$(echo $plan | tr '/' '-')"
+            # Core of the test runs as $USER, -l should clear all BEAKER_envs.
+            rlRun "su -l -c 'cd $USER_HOME/tmt; tmt -c how=full run --id $USER_HOME/$RUN -v plans --name $plan' $USER"
+
+            # Upload file so one can review ASAP
+            rlRun "tar czf /tmp/$RUN.tgz $USER_HOME/$RUN"
+            rlFileSubmit /tmp/$RUN.tgz && rm -f /tmp/$RUN.tgz
+        rlPhaseEnd
+    done
 
     rlPhaseStartCleanup
-        rlRun "tar czf /tmp/run_bundle.tgz $USER_HOME/RUN"
-        rlFileSubmit /tmp/run_bundle.tgz && rm -f /tmp/run_bundle.tgz
-
         rlRun "su -l -c 'tmt run --id $CONNECT_RUN plans --default finish' $USER"
         rlFileRestore
         rlRun "pkill -u $USER" 0,1
