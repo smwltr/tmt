@@ -5,7 +5,10 @@ Release: 1%{?dist}
 Summary: Test Management Tool
 License: MIT
 BuildArch: noarch
+
+# Build only on arches where libguestfs (needed by testcloud) is available
 %{?kernel_arches:ExclusiveArch: %{kernel_arches} noarch}
+ExcludeArch: %{power64}
 
 URL: https://github.com/psss/tmt
 Source0: https://github.com/psss/tmt/releases/download/%{version}/tmt-%{version}.tar.gz
