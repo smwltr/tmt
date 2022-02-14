@@ -19,20 +19,20 @@ provision:
     /name:
         prepare:
             how: shell
-            on: server-one
+            where: server-one
             script: echo 'Server one'
     /role:
         prepare:
             how: shell
-            on: server
+            where: server
             script: echo 'Server'
     /combined:
         prepare:
           - how: shell
-            on: client-one
+            where: client-one
             script: echo 'Client one'
           - how: shell
-            on: server
+            where: server
             script: echo 'Server'
           - how: shell
             script: echo 'All'

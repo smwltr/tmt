@@ -67,6 +67,8 @@ class Prepare(tmt.steps.Step):
         host_mapping = {}
         for guest in self.plan.provision.guests():
             if hasattr(guest, 'guest') and guest.guest:
+                # FIXME: guest.guest may not be simply an IP address but also
+                #        a host name.
                 host_mapping[guest.name] = guest.guest
         return host_mapping
 
@@ -152,7 +154,7 @@ class PreparePlugin(tmt.steps.Plugin):
     _supported_methods = []
 
     # Common keys for all prepare step implementations
-    _common_keys = ['on']
+    _common_keys = ['where']
 
     @classmethod
     def base_command(cls, method_class=None, usage=None):
@@ -183,6 +185,6 @@ class PreparePlugin(tmt.steps.Plugin):
             self.info('guest', guest.name, 'green')
 
         # Show requested role if defined
-        on = self.get('on')
-        if on:
-            self.info('on', on, 'green')
+        where = self.get('where')
+        if where:
+            self.info('where', where, 'green')

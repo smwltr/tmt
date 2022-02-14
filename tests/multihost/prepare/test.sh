@@ -22,7 +22,7 @@ rlJournalStart
         rlRun -s "tmt run $opt plan -n name"
         # 4 implicit + 1 specific preparation = 5 preparations
         rlAssertGrep "5 preparations applied" $rlRun_LOG
-        rlAssertGrep "on: server-one" $rlRun_LOG
+        rlAssertGrep "where: server-one" $rlRun_LOG
         rlRun "grep 'script: echo' $rlRun_LOG | wc -l > lines"
         rlAssertGrep "1" lines
     rlPhaseEnd
@@ -31,7 +31,7 @@ rlJournalStart
         rlRun -s "tmt run $opt plan -n role"
         # 4 implicit + 2 run based on role = 6 preparations
         rlAssertGrep "6 preparations applied" $rlRun_LOG
-        rlAssertGrep "on: server" $rlRun_LOG
+        rlAssertGrep "where: server" $rlRun_LOG
         rlRun "grep 'script: echo' $rlRun_LOG | wc -l > lines"
         rlAssertGrep "2" lines
     rlPhaseEnd

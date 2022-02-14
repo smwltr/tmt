@@ -39,14 +39,6 @@ class PrepareMultihost(tmt.steps.prepare.PreparePlugin):
             return {}
         return default
 
-    def show(self):
-        """ Show provided playbooks """
-        super().show(self._keys)
-
-    def wake(self, data=None):
-        """ Override options and wake up the guest """
-        super().wake(self._keys)
-
     def go(self, guest):
         """ Prepare the guests """
         super().go(guest)

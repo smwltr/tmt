@@ -271,16 +271,6 @@ class Plugin(tmt.utils.Common, metaclass=PluginIndex):
                 f"Missing 'name' in the {step} step config "
                 f"of the '{step.plan}' plan.")
 
-        # FIXME Convert boolean keys 'True' into string 'on'
-        # This is necessary until python3-ruamel-yaml >= 0.16
-        # is available on epel-8 as well as it seems that 0.15
-        # does not fully support the yaml 1.2 version.
-        # https://bugzilla.redhat.com/show_bug.cgi?id=1700334
-        try:
-            data["on"] = data.pop(True)
-        except KeyError:
-            pass
-
         # Store name, data and parent step
         super().__init__(parent=step, name=data['name'])
         self.data = data
@@ -393,10 +383,10 @@ class Plugin(tmt.utils.Common, metaclass=PluginIndex):
 
     def enabled_on_guest(self, guest):
         """ Check if the plugin is enabled on the specific guest """
-        on = self.get('on')
-        if not on:
+        where = self.get('where')
+        if not where:
             return True
-        return on in (guest.name, guest.role)
+        return where in (guest.name, guest.role)
 
     def wake(self, keys=None):
         """
