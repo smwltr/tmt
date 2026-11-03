@@ -74,6 +74,15 @@ execute:
                 test: test -d tests
                 path: /tests-main
 
+    /unsafe-url:
+        summary: Test that unsafe git urls are rejected
+        discover:
+            how: shell
+            url: ext::sh -c false
+            tests:
+              - name: ping
+                test: "true"
+
 /fmf:
     /url:
         /ref:

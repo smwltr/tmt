@@ -3,6 +3,8 @@ Utility functions for filesystem operations.
 """
 
 import shutil
+import sys
+import tarfile
 from typing import Callable, TypeAlias
 
 import tmt.log
@@ -144,3 +146,37 @@ def copy_tree(
             raise GeneralError(f"Failed to copy tree '{src}' => '{dst}'.") from exc
 
     raise GeneralError(f"Failed to copy tree '{src}' => '{dst}'.")
+
+
+def unpack_archive(archive_path: Path, destination: Path) -> None:
+    """
+    Extract an archive into the destination directory, safely.
+
+    Members of the archive are extracted using Python's ``data`` filter:
+    paths outside of the destination directory (absolute paths are
+    sanitized to be relative, paths using ``..`` are rejected), special
+    files and symlinks pointing outside of the destination are refused.
+    This prevents a crafted archive, often downloaded from an untrusted
+    URL, from writing files outside of the extraction directory.
+
+    The extraction filter is available since Python 3.12.4, older
+    interpreters extract with the legacy, fully trusted behavior.
+
+    :param archive_path: path to the archive to extract.
+    :param destination: directory to extract the archive into.
+    :raises GeneralError: when the archive cannot be extracted safely.
+    """
+
+    if sys.version_info >= (3, 12, 4):
+        try:
+            shutil.unpack_archive(archive_path, destination, filter='data')
+
+        except tarfile.FilterError as error:
+            raise GeneralError(
+                f"Failed to safely extract archive '{archive_path}': {error}"
+            ) from error
+
+    else:
+        # TODO(3.12.4): drop this branch once older interpreters are not
+        # supported, they do not implement extraction filters.
+        shutil.unpack_archive(archive_path, destination)

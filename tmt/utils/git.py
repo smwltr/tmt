@@ -281,6 +281,63 @@ CLONABLE_GIT_URL_PATTERNS: list[tuple[str, str]] = [
     ),
 ]
 
+#: Transports allowed when cloning git repositories. URLs with an explicit
+#: scheme not listed here are rejected, together with remote helper URLs
+#: (``<helper>::<address>``, e.g. ``ext::<command>``) which may execute
+#: arbitrary commands. URLs without a scheme (scp-like addresses and local
+#: paths) are allowed.
+GIT_URL_ALLOWED_SCHEMES: tuple[str, ...] = (
+    'file',
+    'git',
+    'git+ssh',
+    'http',
+    'https',
+    'ssh',
+    'ssh+git',
+)
+
+GIT_REMOTE_HELPER_PATTERN: Pattern[str] = re.compile(r'^[a-zA-Z0-9+.-]+::')
+GIT_URL_SCHEME_PATTERN: Pattern[str] = re.compile(r'^([a-zA-Z0-9+.-]+)://')
+
+
+def validate_git_url(url: str) -> str:
+    """
+    Make sure the git URL does not use a forbidden transport.
+
+    Git URLs of the ``<helper>::<address>`` form ask git to invoke the
+    corresponding remote helper (``git-remote-<helper>``). Some helpers
+    execute commands locally, most notably ``ext::<command>`` which runs
+    an arbitrary command. Since URLs often come from test metadata which
+    may be untrusted (plans can be stored in a remote repository and are
+    cloned and executed by tmt on the runner), reject such URLs together
+    with URLs using schemes outside of :py:data:`GIT_URL_ALLOWED_SCHEMES`.
+    URLs without a scheme, i.e. scp-like addresses (``user@host:path``)
+    and local paths, are allowed.
+
+    :param url: the git URL to validate.
+    :returns: the validated URL, unchanged.
+    :raises GitUrlError: when the URL uses a forbidden transport.
+    """
+
+    # Remote helper transport, e.g. 'ext::<command>' or 'fd::<descriptor>'
+    if GIT_REMOTE_HELPER_PATTERN.match(url):
+        raise GitUrlError(f"Remote helper transport is not allowed in git url '{url}'.")
+
+    # Explicit scheme, e.g. 'https://git.example.com/repo'
+    scheme = GIT_URL_SCHEME_PATTERN.match(url)
+    if scheme is not None and scheme.group(1).lower() not in GIT_URL_ALLOWED_SCHEMES:
+        raise GitUrlError(
+            f"Scheme '{scheme.group(1)}' is not allowed in git url '{url}'. "
+            f"Allowed schemes are: {', '.join(GIT_URL_ALLOWED_SCHEMES)}."
+        )
+
+    # The rest is either an scp-like address or a local path. Both are fine,
+    # but the URL must not look like a command line option.
+    if url.startswith('-'):
+        raise GitUrlError(f"Invalid git url '{url}'.")
+
+    return url
+
 
 def clonable_git_url(url: str) -> str:
     """
@@ -759,6 +816,9 @@ def git_clone(
     :param logger: A Logger instance to be used for logging.
     :returns: Command output, bundled in a :py:class:`CommandOutput` tuple.
     """
+
+    # Make sure the URL does not use a forbidden transport, e.g. 'ext::'
+    validate_git_url(url)
 
     environment = Environment.from_environ()
     environment["GIT_ASKPASS"] = EnvVarValue("echo")

@@ -3,14 +3,53 @@ Url handling helpers.
 """
 
 import email.message
+import re
 
 import tmt.log
 import tmt.utils
 from tmt.utils import Path
 
+#: Schemes allowed when downloading files, e.g. archives fetched by the
+#: discover step. Other schemes, including remote helper URLs of the
+#: ``<helper>::<address>`` form, are rejected.
+DOWNLOAD_URL_ALLOWED_SCHEMES: tuple[str, ...] = ('http', 'https')
+
+DOWNLOAD_URL_REMOTE_HELPER_PATTERN: re.Pattern[str] = re.compile(r'^[a-zA-Z0-9+.-]+::')
+DOWNLOAD_URL_SCHEME_PATTERN: re.Pattern[str] = re.compile(r'^([a-zA-Z0-9+.-]+)://')
+
+
+def validate_download_url(url: str) -> str:
+    """
+    Make sure the URL can be downloaded.
+
+    Only plain ``http`` and ``https`` URLs are allowed. Since the URL often
+    comes from test metadata which may be untrusted, reject URLs using
+    other schemes or remote helper transports, giving a clear error instead
+    of a confusing failure of the underlying HTTP client.
+
+    :param url: the URL to validate.
+    :returns: the validated URL, unchanged.
+    :raises GeneralError: when the URL cannot be downloaded.
+    """
+
+    if DOWNLOAD_URL_REMOTE_HELPER_PATTERN.match(url):
+        raise tmt.utils.GeneralError(
+            f"Remote helper transport is not allowed for downloading '{url}'."
+        )
+
+    scheme = DOWNLOAD_URL_SCHEME_PATTERN.match(url)
+    if scheme is not None and scheme.group(1).lower() not in DOWNLOAD_URL_ALLOWED_SCHEMES:
+        raise tmt.utils.GeneralError(
+            f"Scheme '{scheme.group(1)}' is not allowed for downloading '{url}'. "
+            f"Allowed schemes are: {', '.join(DOWNLOAD_URL_ALLOWED_SCHEMES)}."
+        )
+
+    return url
+
 
 def download(url: str, destination: Path, *, logger: tmt.log.Logger) -> Path:
     logger.debug(f"Downloading '{url}'.")
+    validate_download_url(url)
     with tmt.utils.retry_session(logger=logger) as session:
         response = session.get(url, stream=True)
     response.raise_for_status()
