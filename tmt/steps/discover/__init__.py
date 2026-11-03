@@ -68,6 +68,10 @@ class DiscoverStepData(tmt.steps.WhereableStepData, tmt.steps.StepData):
             External URL containing the metadata tree.
             Current git repository used by default.
             See ``url-content-type`` key for details on what content is accepted.
+            For git repositories, only ``http``, ``https``, ``git`` and
+            ``ssh`` (including aliases such as ``git+ssh``) URLs, scp-like
+            addresses and local paths are allowed; git remote helpers such
+            as ``ext::<command>`` are rejected.
             """,
     )
 
@@ -345,7 +349,7 @@ class DiscoverPlugin(tmt.steps.GuestlessPlugin[DiscoverStepDataT, None]):
         elif self.data.url_content_type == "archive":
             archive_path = tmt.utils.url.download(url, self.phase_workdir, logger=self._logger)
             self.debug(f"Extracting archive to '{self.test_dir}'.")
-            shutil.unpack_archive(archive_path, self.test_dir)
+            tmt.utils.filesystem.unpack_archive(archive_path, self.test_dir)
         else:
             raise ValueError(
                 f"url-content-type has unsupported value: '{self.data.url_content_type}'. "

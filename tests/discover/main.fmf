@@ -45,6 +45,10 @@ tier: 3
     summary: Get tests from arbitrary external archive
     test: ./archive.sh
 
+/url-validation:
+    summary: Verify unsafe git urls and archive members are rejected
+    test: ./url-validation.sh
+
 /dynamic-ref:
     /fmf:
         summary: Check that dynamic ref evaluation works (fmf)

@@ -1,0 +1,23 @@
+description: |
+    Test metadata, e.g. plans stored in a remote repository, are cloned and
+    processed by tmt on the runner. URLs from such metadata were passed
+    to ``git clone`` and to the archive download & extraction without any
+    validation, depending entirely on the default configuration of the
+    deployment to stay safe:
+
+    * git remote helper URLs, most notably ``ext::<command>``, execute
+      an arbitrary command when cloned. They are refused by git's default
+      ``protocol.ext.allow = never``, however tmt itself did not validate
+      the transport at all. URLs provided by the ``url`` keys of the
+      ``discover`` and ``prepare`` steps, by ``import`` plan references
+      and by beakerlib libraries are now validated by tmt: only ``http``,
+      ``https``, ``git`` and ``ssh`` (including aliases such as
+      ``git+ssh``) URLs, scp-like addresses and local paths are allowed,
+      and URLs resembling command line options are rejected as well.
+    * archives downloaded for ``discover`` with
+      ``url-content-type: archive`` are now extracted with Python's
+      ``data`` filter, refusing members outside of the extraction
+      directory (previously a crafted archive could write files anywhere
+      the tmt process could write, e.g. as root inside the Testing Farm
+      worker container). The download itself now accepts only ``http``
+      and ``https`` URLs.

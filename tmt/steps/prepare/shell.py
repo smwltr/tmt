@@ -39,7 +39,10 @@ class PrepareShellData(tmt.steps.prepare.PrepareStepData):
         help="""
             URL of a repository to clone. It will be pushed to guests before
             running any scripts, the path on the guest will be stored in
-            a step variable.
+            a step variable. The repository is cloned on the runner, therefore
+            only ``http``, ``https``, ``git`` and ``ssh`` (including aliases
+            such as ``git+ssh``) URLs, scp-like addresses and local paths are
+            allowed; git remote helpers such as ``ext::<command>`` are rejected.
             """,
     )
 
